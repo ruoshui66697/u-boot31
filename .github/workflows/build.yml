@@ -20,7 +20,7 @@ jobs:
 
       - name: Build
         run: |
-          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- A31-PCB_defconfig
+          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- Sinlinx_SinA31s_defconfig
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j$(nproc)
 
       - name: Upload
