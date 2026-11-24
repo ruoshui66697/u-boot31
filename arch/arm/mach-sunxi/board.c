@@ -455,8 +455,9 @@ static bool sunxi_valid_emmc_boot(struct mmc *mmc)
 	for (count = 0; count < spl_size / 4; count++)
 		chksum += buffer[count];
 
-	debug("%s(): %s part\n", __func__,
-	      result == MMCSD_MODE_RAW ? "user" : "boot");
+    debug("eMMC boot part SPL checksum: stored: 0x%08x, computed: 0x%08x\n",
+	      emmc_checksum, chksum);
+
 
 	return emmc_checksum == chksum;
 }
