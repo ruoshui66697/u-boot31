@@ -1,0 +1,31 @@
+name: Build U-Boot for A31s
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-linux-gnueabihf device-tree-compiler
+
+      - name: Build
+        run: |
+          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- A31-PCB_defconfig
+          make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j$(nproc)
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: u-boot-a31s
+          path: u-boot-sunxi-with-spl.bin
