@@ -1,8 +1,7 @@
 name: Build U-Boot for A31s
 
 on:
-  push:
-    branches: [ "master" ]
+
   workflow_dispatch:
 
 jobs:
