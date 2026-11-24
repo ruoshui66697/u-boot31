@@ -29,6 +29,10 @@
 
 #include <linux/compiler.h>
 
+/* FEL-SW: must match cmd/fel.c */
+#define FEL_MAGIC_ADDR	0x5ffffffc
+#define FEL_MAGIC_VAL	0x46454c42	/* "FELB" */
+
 struct fel_stash {
 	uint32_t sp;
 	uint32_t lr;
@@ -38,6 +42,7 @@ struct fel_stash {
 	uint32_t sp_irq;
 	uint32_t icc_pmr;
 	uint32_t icc_igrpen1;
+	uint32_t force_fel;	/* FEL-SW: set when 'fel' was requested */
 };
 
 struct fel_stash fel_stash __section(".data");
@@ -59,7 +64,7 @@ static struct mm_region sunxi_mem_map[] = {
 		.phys = 0x40000000UL,
 		.size = CONFIG_SUNXI_DRAM_MAX_SIZE,
 		.attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL) |
-			 PTE_BLOCK_INNER_SHARE
+			PTE_BLOCK_INNER_SHARE
 	}, {
 		/* List terminator */
 		0,
@@ -121,7 +126,7 @@ static int gpio_init(void)
 	sunxi_gpio_set_cfgpin(SUNXI_GPB(0), SUN8I_A33_GPB_UART0);
 	sunxi_gpio_set_cfgpin(SUNXI_GPB(1), SUN8I_A33_GPB_UART0);
 	sunxi_gpio_set_pull(SUNXI_GPB(1), SUNXI_GPIO_PULL_UP);
-#elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUNXI_H3_H5)
+#elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_SUNXI_H3_H5)
 	sunxi_gpio_set_cfgpin(SUNXI_GPA(4), SUN8I_H3_GPA_UART0);
 	sunxi_gpio_set_cfgpin(SUNXI_GPA(5), SUN8I_H3_GPA_UART0);
 	sunxi_gpio_set_pull(SUNXI_GPA(5), SUNXI_GPIO_PULL_UP);
@@ -172,7 +177,7 @@ static int gpio_init(void)
 #elif CONFIG_CONS_INDEX == 3 && defined(CONFIG_MACH_SUN8I_H3)
 	sunxi_gpio_set_cfgpin(SUNXI_GPA(0), SUN8I_H3_GPA_UART2);
 	sunxi_gpio_set_cfgpin(SUNXI_GPA(1), SUN8I_H3_GPA_UART2);
-	sunxi_gpio_set_pull(SUNXI_GPA(1), SUNXI_GPIO_PULL_UP);
+	sunxi_gpio_set_cfgpin(SUNXI_GPA(1), SUNXI_GPIO_PULL_UP);
 #elif CONFIG_CONS_INDEX == 3 && defined(CONFIG_MACH_SUN8I)
 	sunxi_gpio_set_cfgpin(SUNXI_GPB(0), SUN8I_GPB_UART2);
 	sunxi_gpio_set_cfgpin(SUNXI_GPB(1), SUN8I_GPB_UART2);
@@ -275,6 +280,14 @@ static int sunxi_get_boot_source(void)
 
 	if (IS_ENABLED(CONFIG_MACH_SUNIV))
 		return suniv_get_boot_source();
+
+	/* FEL-SW: 'fel' command asked us to drop back into BROM FEL */
+	if (readl(FEL_MAGIC_ADDR) == FEL_MAGIC_VAL) {
+		writel(0, FEL_MAGIC_ADDR);
+		fel_stash.force_fel = 1;
+		return SUNXI_INVALID_BOOT_SOURCE;
+	}
+
 	if (sunxi_egon_valid(egon_head))
 		return readb(&egon_head->boot_media);
 	if (sunxi_toc0_valid(toc0_info))
@@ -384,7 +397,7 @@ __weak void sunxi_sram_init(void)
  * source code into SRAM A1 as when loading the SPL from the normal
  * eMMC user data partition: 0x2. So to know where we have been loaded
  * from, we repeat the BROM algorithm here: checking for a valid eGON boot
- * image at offset 0 of a (potentially) selected boot partition.
+ * image at offset 0 of a (potentially) supported boot partition.
  * If any of the conditions is not met, it must have been the eMMC user
  * data partition.
  */
@@ -403,7 +416,7 @@ static bool sunxi_valid_emmc_boot(struct mmc *mmc)
 		return false;
 
 	/*
-	 * The BOOT_BUS_CONDITION register must be 4-bit SDR, with (0x09)
+	 * BOOT_BUS_CONDITION register must be 4-bit SDR, with (0x09)
 	 * or without (0x01) high speed timings.
 	 */
 	if ((mmc->ext_csd[EXT_CSD_BOOT_BUS_WIDTH] & 0x1b) != 0x01 &&
@@ -438,12 +451,12 @@ static bool sunxi_valid_emmc_boot(struct mmc *mmc)
 	emmc_checksum = buffer[3];
 	buffer[3] = 0x5f0a6c39;
 
-	/* The checksum is a simple ignore-carry addition of all words. */
+	/* The checksum is a simple ignore-carry addition of other words. */
 	for (count = 0; count < spl_size / 4; count++)
 		chksum += buffer[count];
 
-	debug("eMMC boot part SPL checksum: stored: 0x%08x, computed: 0x%08x\n",
-	       emmc_checksum, chksum);
+	debug("%s(): %s part\n", __func__,
+	      result == MMCSD_MODE_RAW ? "user" : "boot");
 
 	return emmc_checksum == chksum;
 }
@@ -534,7 +547,7 @@ void reset_cpu(void)
 #if !CONFIG_IS_ENABLED(SYS_DCACHE_OFF) && defined(CONFIG_CPU_V7A)
 void enable_caches(void)
 {
-	/* Enable D-cache. I-cache is already enabled in start.S */
+	/* Enable D-cache. I-cache is enabled in start.S */
 	dcache_enable();
 }
 #endif
