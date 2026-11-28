@@ -254,8 +254,8 @@ if os.environ['MARS_PINMUX'] == '1':
     L += ["\tpinctrl-names = \"default\";", "\tpinctrl-0 = <&mars_nand_pins>;"]
 L += [
     "\tnand@0 {",
-    "\t\treg = <0>;",
-    "\t\tallwinner,rb = <0>;",
+    "\t\treg = <0 1>;",
+    "\t\tallwinner,rb = <0 1>;",
     "\t\tnand-ecc-mode = \"hw\";",
     "\t};",
     "};",
@@ -281,7 +281,7 @@ if "MARS-A31s FULL-ID" not in ids:
         "\t/* MARS-A31s FULL-ID BEGIN */\n"
         "\t{\"JS29F16B08CCMF2 16Gb 3.3V 8-bit\",\n"
         "\t\t{ .id = {0x89, 0x88, 0x24, 0x4b, 0xa9, 0x84} },\n"
-        "\t\t  SZ_8K, SZ_1K, SZ_2M, 0, 6, 448, NAND_ECC_INFO(24, SZ_1K),\n"
+        "\t\t  SZ_8K, SZ_8K, SZ_2M, 0, 6, 448, NAND_ECC_INFO(24, SZ_1K),\n"
         "\t\t  0 },\n"
         "\t/* MARS-A31s FULL-ID END */\n"
     )
