@@ -30,7 +30,7 @@
 #   MARS_NAND_BLOCK_SIZE  擦除块大小           默认 0x800000 [C 级占位]
 #   MARS_MTDIDS           例 nand0=sunxi-nand.0   空=不写（等 mtd list 实测）
 #   MARS_MTDPARTS         例 mtdparts=...         空=不写（属第 2 步分区轮）
-#   MARS_A3_PINMUX        1=注入 pinctrl 块    默认 0（依赖 SPL 硬编码 mux）
+#   MARS_A3_PINMUX        1=注入 pinctrl 块    默认 1（sun6i nand0 脚位组）
 # =============================================================================
 
 set -euo pipefail
@@ -52,7 +52,7 @@ OOB="${MARS_NAND_OOBSIZE:-0x4C0}"
 BLOCK="${MARS_NAND_BLOCK_SIZE:-0x800000}"
 MTDIDS="${MARS_MTDIDS:-}"
 MTDPARTS="${MARS_MTDPARTS:-}"
-A3_PINMUX="${MARS_A3_PINMUX:-0}"
+A3_PINMUX="${MARS_A3_PINMUX:-1}"
 
 # 三个几何值只要有一个没显式给，整轮产物就标记为 COMPILE-ONLY
 PLACEHOLDER=0
@@ -233,14 +233,16 @@ L = [
 ]
 
 if os.environ['MARS_PINMUX'] == '1':
-    # C 级脚位（2015 未合入 patch），默认不启用；启用前须核对 sun6i pinctrl
-    # driver 是否认 "nand0" function。默认依赖 SPL 的 board_nand_init() 硬编码 mux。
+    # sun6i-a31 pinctrl 逐字支持 { "nand0", 2 }；A31 NAND0 脚位 PC0-PC15：
+    # PC0 WE / PC1 ALE / PC2 CLE / PC3 CE1 / PC4 CE0 / PC5 RE /
+    # PC6 RB0 / PC7 RB1 / PC8-PC15 DQ0-DQ7（x8 片，16bit 才到 PC23）。
+    # FEL ramboot 不走 SPL 的 board_nand_init() 硬编码 mux，必须在 DTS 里配。
     L += [
         "&pio {",
         "\tmars_nand_pins: mars-nand-pins {",
-        "\t\tpins = \"PC0\", \"PC1\", \"PC2\", \"PC5\", \"PC8\", \"PC9\",",
-        "\t\t       \"PC10\", \"PC11\", \"PC12\", \"PC13\", \"PC14\",",
-        "\t\t       \"PC15\", \"PC16\";",
+        "\t\tpins = \"PC0\", \"PC1\", \"PC2\", \"PC3\", \"PC4\", \"PC5\",",
+        "\t\t       \"PC6\", \"PC7\", \"PC8\", \"PC9\", \"PC10\",",
+        "\t\t       \"PC11\", \"PC12\", \"PC13\", \"PC14\", \"PC15\";",
         "\t\tfunction = \"nand0\";",
         "\t};",
         "};",
