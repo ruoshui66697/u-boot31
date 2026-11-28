@@ -222,6 +222,7 @@ L = [
     "\t\t\tinterrupts = <GIC_SPI 13 IRQ_TYPE_LEVEL_HIGH>;",
     "\t\t\tclocks = <&ccu CLK_AHB1_NAND0>, <&ccu CLK_NAND0>;",
     "\t\t\tclock-names = \"ahb\", \"mod\";",
+    "\t\t\tresets = <&ccu RST_AHB1_NAND0>;",
     "\t\t\t#address-cells = <1>;",
     "\t\t\t#size-cells = <0>;",
     "\t\t\tstatus = \"disabled\";",
