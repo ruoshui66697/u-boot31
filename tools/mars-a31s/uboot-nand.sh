@@ -270,6 +270,23 @@ block = "\n".join(L) + "\n"
 if not s.endswith("\n"):
     s += "\n"
 open(p, 'w', encoding='utf-8').write(s + "\n" + block)
+# --- 绕开参数页：按完整 ID 直接识别本片 ---
+ids_path = "drivers/mtd/nand/raw/nand_ids.c"
+ids = open(ids_path, encoding='utf-8').read()
+if "MARS-A31s FULL-ID" not in ids:
+    anchor = "struct nand_flash_dev nand_flash_ids[] = {\n"
+    if ids.count(anchor) != 1:
+        print("  stage3: nand_ids.c 锚点异常", file=sys.stderr); sys.exit(1)
+    entry = (
+        "\t/* MARS-A31s FULL-ID BEGIN */\n"
+        "\t{\"JS29F16B08CCMF2 16Gb 3.3V 8-bit\",\n"
+        "\t\t{ .id = {0x89, 0x88, 0x24, 0x4b, 0xa9, 0x84} },\n"
+        "\t\t  SZ_8K, SZ_1K, SZ_2M, 0, 6, 448, NAND_ECC_INFO(24, SZ_1K),\n"
+        "\t\t  0 },\n"
+        "\t/* MARS-A31s FULL-ID END */\n"
+    )
+    open(ids_path, 'w', encoding='utf-8').write(ids.replace(anchor, anchor + entry, 1))
+    print("  stage3: nand_ids.c 注入 full-ID 条目")
 print("  stage3: 注入 nfc 节点 + &mmc3 disabled（pinmux=%s）" % os.environ['MARS_PINMUX'])
 PY
 }
