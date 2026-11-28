@@ -26,7 +26,7 @@ jobs:
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- Sinlinx_SinA31s_defconfig
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j$(nproc)
           grep -E 'CONFIG_(NAND_SUNXI|MTD_RAW_NAND|CMD_NAND|SPL_NAND_SUPPORT|SYS_NAND_U_BOOT_OFFS)=' .config
-          dtc -I dtb -O dts arch/arm/dts/sun6i-a31s-sina31s.dtb | grep -B6 -A10 -E 'nand@1c03000|cap-mmc-hw-reset'
+          dtc -I dtb -O dts arch/arm/dts/sun6i-a31s-sina31s.dtb | grep -B18 -A18 -E 'nand@1c03000|cap-mmc-hw-reset'
       
       - name: Upload
         uses: actions/upload-artifact@v4
