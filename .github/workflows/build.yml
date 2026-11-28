@@ -19,6 +19,10 @@ jobs:
           sudo apt-get install -y gcc-arm-linux-gnueabihf device-tree-compiler
       
       - name: Apply MARS-A31s U-Boot patches
+        env:
+          MARS_NAND_PAGE_SIZE: "0x2000"
+          MARS_NAND_OOBSIZE: "0x1C0"
+          MARS_NAND_BLOCK_SIZE: "0x200000"
         run: bash tools/mars-a31s/uboot-nand.sh apply --up-to 3
 
       - name: Build
