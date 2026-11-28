@@ -30,4 +30,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: u-boot-a31s
-          path: u-boot-sunxi-with-spl.bin
+          path: |
+            u-boot-sunxi-with-spl.bin
+            u-boot-dtb.bin
+            spl/sunxi-spl.bin
+            spl/sunxi-spl-with-ecc.bin
+            .config
