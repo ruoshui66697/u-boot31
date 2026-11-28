@@ -25,7 +25,7 @@ jobs:
         run: |
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- Sinlinx_SinA31s_defconfig
           make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j$(nproc)
-
+          grep -E 'CONFIG_(NAND_SUNXI|MTD_RAW_NAND|CMD_NAND|SPL_NAND_SUPPORT|SYS_NAND_U_BOOT_OFFS)=' .config
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
