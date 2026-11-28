@@ -255,6 +255,7 @@ if os.environ['MARS_PINMUX'] == '1':
 L += [
     "\tnand@0 {",
     "\t\treg = <0>;",
+    "\t\tallwinner,rb = <0>;",
     "\t\tnand-ecc-mode = \"hw\";",
     "\t};",
     "};",
